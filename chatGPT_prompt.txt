@@ -1,0 +1,79 @@
+Here is my solidity ERC20 token.
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract AcidToken is ERC20 {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 _initialSupply
+    ) ERC20(_name, _symbol) {
+        _mint(msg.sender, _initialSupply);
+    }
+}
+
+```
+
+And here Acid my first couple of tests written in solidity.
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Test} from "forge-std/Test.sol";
+import {DeployAcidToken} from "../../script/DeployAcidToken.s.sol";
+import {AcidToken} from "../../src/AcidToken.sol";
+
+contract AcidTokenTest is Test {
+    AcidToken public acidToken;
+    DeployAcidToken public deployer;
+
+    address stacce = makeAddr("stacce");
+    address godi = makeAddr("godi");
+
+    uint256 public constant STARTING_BALANCE = 100 ether;
+
+    function setUp() public {
+        deployer = new DeployAcidToken();
+        acidToken = deployer.run();
+
+        vm.prank(msg.sender);
+        acidToken.transfer(stacce, STARTING_BALANCE);
+    }
+
+    function test_StacceBalance() public {
+        assertEq(acidToken.balanceOf(stacce), STARTING_BALANCE);
+    }
+
+    function test_TransferAllowances() public {
+        // transferFrom
+        uint256 initialAllowance = 700;
+
+        // Stacce aproves Godi to spenk tokens on his behalf
+        vm.prank(stacce);
+        acidToken.approve(godi, initialAllowance);
+
+        uint256 transferAmount = 300;
+
+        vm.prank(godi);
+        acidToken.transferFrom(stacce, godi, transferAmount);
+        //? Why not use 'transfer'? Because it sets '_from' address to msg.sender
+        assertEq(acidToken.balanceOf(godi), transferAmount);
+        assertEq(
+            acidToken.balanceOf(stacce),
+            STARTING_BALANCE - transferAmount
+        );
+    }
+}
+
+```
+
+Can you write the rest of the tests? Please include tests for:
+
+- Allowances
+- transfers
+- anything else that might be important
